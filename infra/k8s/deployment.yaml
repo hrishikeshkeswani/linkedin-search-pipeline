@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: linkedin-search-api
+  namespace: linkedin-search
+  labels:
+    app: linkedin-search-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: linkedin-search-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: linkedin-search-api
+      annotations:
+        # Filebeat autodiscover hint
+        co.elastic.logs/enabled: "true"
+        co.elastic.logs/json.keys_under_root: "true"
+    spec:
+      containers:
+        - name: api
+          image: gcr.io/YOUR_PROJECT/linkedin-search-api:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-search-secrets
+                  key: GROQ_API_KEY
+            - name: LINKEDIN_SESSION_COOKIE
+              valueFrom:
+                secretKeyRef:
+                  name: linkedin-search-secrets
+                  key: LINKEDIN_SESSION_COOKIE
+            - name: GROQ_MODEL
+              value: "llama3-8b-8192"
+            - name: EMBED_DEVICE
+              value: "cpu"
+            - name: FAISS_INDEX_PATH
+              value: "/data/faiss_index"
+            - name: FAISS_METADATA_PATH
+              value: "/data/metadata.jsonl"
+          volumeMounts:
+            - name: faiss-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: faiss-data
+          persistentVolumeClaim:
+            claimName: faiss-pvc

@@ -1,0 +1,13 @@
+[build]
+builder = "dockerfile"
+
+# Railway uses this file to know how to build and run each service.
+# Create two services in the Railway dashboard:
+#   1. "backend"  → set Root Directory to /  → uses Dockerfile
+#   2. "frontend" → set Root Directory to /frontend → uses frontend/Dockerfile
+
+[[deploy]]
+healthcheckPath = "/health"
+healthcheckTimeout = 120
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

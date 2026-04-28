@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: linkedin-search-api
+  namespace: linkedin-search
+spec:
+  selector:
+    app: linkedin-search-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer   # use ClusterIP + Ingress for GKE with HTTPS

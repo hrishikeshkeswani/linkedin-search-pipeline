@@ -1,0 +1,36 @@
+# Environment
+.env
+*.env
+
+# Data (large binary index + scraped posts)
+linkedin_search/data/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Logs
+*.log
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE / Claude
+.claude/
+
+# Debug artifacts
+linkedin_search/tools/debug_screenshot.png
+linkedin_search/tools/page_dump.html
+
+# OS
+.DS_Store
+Thumbs.db
