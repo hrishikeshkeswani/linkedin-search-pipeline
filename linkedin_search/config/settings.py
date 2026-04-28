@@ -9,10 +9,10 @@ from pathlib import Path
 class Settings(BaseSettings):
     # ── Groq ──────────────────────────────────────────────────────────
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama3-8b-8192"          # used for query expansion / reranking
+    GROQ_MODEL: str = "llama-3.1-8b-instant"     # used for query expansion / reranking
 
     # ── Embeddings ────────────────────────────────────────────────────
-    EMBED_MODEL: str = "BAAI/bge-large-en-v1.5"  # local sentence-transformers
+    EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"  # local sentence-transformers
     EMBED_BATCH_SIZE: int = 64
     EMBED_DEVICE: str = "cpu"                    # "cuda" if GPU available
 
