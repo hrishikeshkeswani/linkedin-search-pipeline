@@ -46,9 +46,6 @@ export default function ResultCard({ result, rank }) {
           {posted_at && <span>{new Date(posted_at).toLocaleDateString()}</span>}
         </div>
         <div className="flex items-center gap-2">
-          {llm_score != null && (
-            <span className="text-amber-400">LLM {llm_score}/10</span>
-          )}
           <span>score {score.toFixed(3)}</span>
           {url && (
             <a href={url} target="_blank" rel="noopener noreferrer"
