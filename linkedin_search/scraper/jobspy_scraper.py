@@ -79,7 +79,7 @@ def _job_to_post(row, query: str) -> LinkedInPost:
         likes=0,
         posted_at=posted_at,
         query=query,
-        source=site,
+        source="jobspy",
     )
 
 

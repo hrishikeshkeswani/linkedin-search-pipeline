@@ -136,11 +136,15 @@ def search_post(req: SearchRequest):
     _require_ready()
     t0 = time.perf_counter()
 
+    # Hiring Posts = people's feed posts (LinkedIn, HN, Reddit)
+    # Job Posts    = structured job board listings (JobSpy, RemoteOK, Adzuna, Indeed)
+    HIRING_SOURCES = {"linkedin", "hackernews", "reddit"}
+    JOB_SOURCES    = {"jobspy", "remoteok", "adzuna", "indeed", "zip_recruiter"}
     filters = req.filters or {}
     if req.post_type == "hiring":
-        filters = {**filters, "is_hiring": True}
+        filters = {**filters, "sources": HIRING_SOURCES}
     elif req.post_type == "jobs":
-        filters = {**filters, "is_hiring": False}
+        filters = {**filters, "sources": JOB_SOURCES}
 
     if req.synthesize:
         out = _rag.invoke(req.query, filters=filters or None)
