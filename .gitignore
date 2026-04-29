@@ -2,8 +2,8 @@
 .env
 *.env
 
-# Data (large binary index + scraped posts)
-linkedin_search/data/
+# Data — raw scraped files only (index is committed for Railway deploy)
+linkedin_search/data/raw/
 
 # Python
 __pycache__/
