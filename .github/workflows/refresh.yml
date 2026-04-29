@@ -1,0 +1,39 @@
+name: Daily Index Refresh
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # runs every day at 2am UTC
+  workflow_dispatch:       # allows manual trigger from GitHub UI
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          pip install -r linkedin_search/requirements.txt
+
+      - name: Run pipeline
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          cd linkedin_search
+          python run_pipeline.py --source hn --queries "machine learning engineer hiring" "data scientist hiring" "software engineer hiring" "AI engineer hiring" "backend engineer hiring" --max 100
+
+      - name: Commit updated index
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add linkedin_search/data/faiss_index linkedin_search/data/metadata.jsonl linkedin_search/data/seen_ids.txt
+          git diff --staged --quiet || git commit -m "chore: daily index refresh $(date -u '+%Y-%m-%d')"
+          git push
