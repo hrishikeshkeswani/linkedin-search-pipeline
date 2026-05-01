@@ -23,6 +23,12 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r linkedin_search/requirements.txt
 
+      - name: Clear old index
+        run: |
+          rm -rf linkedin_search/data/faiss_index
+          rm -f linkedin_search/data/metadata.jsonl
+          rm -f linkedin_search/data/seen_ids.txt
+
       - name: Run pipeline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
