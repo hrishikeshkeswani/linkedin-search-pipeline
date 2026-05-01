@@ -256,10 +256,14 @@ class FAISSStore:
     # ── Stats ─────────────────────────────────────────────────────────
 
     def stats(self) -> dict:
+        last_refreshed = None
+        if self._meta:
+            last_refreshed = max(r.get("indexed_at", "") for r in self._meta.values())
         return {
             "total_vectors": self.index.ntotal if self.index else 0,
             "total_metadata": len(self._meta),
             "embed_dim": self.embed_dim,
             "index_path": str(self.index_path),
             "meta_path": str(self.meta_path),
+            "last_refreshed": last_refreshed,
         }

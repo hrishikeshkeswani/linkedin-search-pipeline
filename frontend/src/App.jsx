@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { search } from './api'
+import { useState, useEffect } from 'react'
+import { search, health } from './api'
 import SearchBar from './components/SearchBar'
 import AnswerPanel from './components/AnswerPanel'
 import ResultCard from './components/ResultCard'
@@ -10,6 +10,11 @@ export default function App() {
   const [error, setError] = useState(null)
   const [data, setData] = useState(null)
   const [lastQuery, setLastQuery] = useState('')
+  const [lastRefreshed, setLastRefreshed] = useState(null)
+
+  useEffect(() => {
+    health().then(h => h.last_refreshed && setLastRefreshed(h.last_refreshed)).catch(() => {})
+  }, [])
 
   async function handleSearch(params) {
     setLoading(true)
@@ -40,6 +45,11 @@ export default function App() {
             <h1 className="text-base font-semibold text-white leading-none">LinkedIn Search</h1>
             <p className="text-xs text-slate-500">RAG-powered job search</p>
           </div>
+          {lastRefreshed && (
+            <span className="ml-auto text-xs text-slate-500">
+              Last refreshed: {new Date(lastRefreshed).toLocaleString()}
+            </span>
+          )}
         </div>
       </header>
 

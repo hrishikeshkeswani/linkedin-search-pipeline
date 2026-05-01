@@ -55,3 +55,4 @@ class HealthResponse(BaseModel):
     status: str
     index_ready: bool
     total_vectors: int
+    last_refreshed: str | None = None

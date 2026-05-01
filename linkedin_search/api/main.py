@@ -117,11 +117,12 @@ def _to_post_result(r: dict) -> PostResult:
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 def health():
-    total = _store.stats()["total_vectors"] if _store else 0
+    s = _store.stats() if _store else {}
     return HealthResponse(
         status="ok",
-        index_ready=total > 0,
-        total_vectors=total,
+        index_ready=s.get("total_vectors", 0) > 0,
+        total_vectors=s.get("total_vectors", 0),
+        last_refreshed=s.get("last_refreshed"),
     )
 
 
