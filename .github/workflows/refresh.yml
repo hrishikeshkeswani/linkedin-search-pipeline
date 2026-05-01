@@ -34,18 +34,6 @@ jobs:
                       "backend engineer hiring" "MLOps engineer hiring" \
             --max 100
 
-      - name: Run pipeline (Adzuna — only if credentials set)
-        if: ${{ secrets.ADZUNA_APP_ID != '' }}
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
-          ADZUNA_API_KEY: ${{ secrets.ADZUNA_API_KEY }}
-        run: |
-          cd linkedin_search
-          python run_pipeline.py --source adzuna \
-            --queries "machine learning engineer" "data scientist" "AI engineer" \
-            --max 100
-
       - name: Commit updated index
         run: |
           git config user.name "github-actions[bot]"
