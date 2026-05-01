@@ -23,16 +23,15 @@ jobs:
           pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r linkedin_search/requirements.txt
 
-      - name: Run pipeline (HN + JobSpy + RemoteOK + Reddit)
+      - name: Run pipeline
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
           cd linkedin_search
-          python run_pipeline.py --source hn jobspy remoteok reddit \
-            --queries "machine learning engineer hiring" "data scientist hiring" \
-                      "software engineer hiring" "AI engineer hiring" \
-                      "backend engineer hiring" "MLOps engineer hiring" \
-            --max 100
+          python run_pipeline.py --source hn --queries "machine learning engineer hiring" "data scientist hiring" "software engineer hiring" "AI engineer hiring" --max 100
+          python run_pipeline.py --source jobspy --queries "machine learning engineer" "data scientist" "AI engineer" "backend engineer" --max 100
+          python run_pipeline.py --source remoteok --queries "machine learning" "data scientist" "AI engineer" --max 100
+          python run_pipeline.py --source reddit --queries "machine learning engineer hiring" "data scientist hiring" "AI engineer hiring" --max 100
 
       - name: Commit updated index
         run: |
