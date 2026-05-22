@@ -19,7 +19,7 @@ from langchain_core.documents import Document
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
-from langchain_groq import ChatGroq
+from langchain_anthropic import ChatAnthropic
 
 from config.settings import settings
 from indexer.faiss_store import FAISSStore
@@ -109,9 +109,9 @@ class LinkedInRAGChain:
         self.expand_queries = expand_queries
         self.rerank = rerank
 
-        self.llm = ChatGroq(
-            api_key=settings.GROQ_API_KEY,
-            model=settings.GROQ_MODEL,
+        self.llm = ChatAnthropic(
+            api_key=settings.ANTHROPIC_API_KEY,
+            model=settings.ANTHROPIC_MODEL,
             temperature=0.3,
         )
 

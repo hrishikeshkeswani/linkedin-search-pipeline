@@ -1,11 +1,9 @@
 """
 ingestion/groq_reranker.py
 --------------------------
-Uses Groq (Llama 3) for two tasks:
+Uses Claude (Anthropic) for two tasks:
   1. Query expansion  — enriches the user's query before FAISS search
   2. LLM reranking    — scores retrieved candidates and re-orders them
-
-Both are prompt-based; no fine-tuning required.
 """
 
 import json
@@ -13,7 +11,7 @@ import logging
 import os
 from typing import Any
 
-from groq import Groq
+import anthropic
 
 from config.settings import settings
 
@@ -22,13 +20,11 @@ logger = logging.getLogger(__name__)
 
 # ── Client ────────────────────────────────────────────────────────────────────
 
-def _get_client() -> Groq:
-    api_key = settings.GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "")
+def _get_client() -> anthropic.Anthropic:
+    api_key = settings.ANTHROPIC_API_KEY or os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        raise ValueError(
-            "GROQ_API_KEY not set. Add it to your .env file or environment."
-        )
-    return Groq(api_key=api_key)
+        raise ValueError("ANTHROPIC_API_KEY not set. Add it to your .env file or environment.")
+    return anthropic.Anthropic(api_key=api_key)
 
 
 # ── Query expansion ───────────────────────────────────────────────────────────
@@ -46,20 +42,15 @@ Example: ["ML engineer remote", "machine learning engineer hiring", "AI engineer
 """
 
 
-def expand_query(query: str, client: Groq | None = None) -> list[str]:
-    """
-    Returns original query + 3 LLM-generated variants for ensemble search.
-    Falls back to [query] if Groq is unavailable.
-    """
+def expand_query(query: str, client: anthropic.Anthropic | None = None) -> list[str]:
     client = client or _get_client()
     try:
-        resp = client.chat.completions.create(
-            model=settings.GROQ_MODEL,
-            messages=[{"role": "user", "content": EXPANSION_PROMPT.format(query=query)}],
+        resp = client.messages.create(
+            model=settings.ANTHROPIC_MODEL,
             max_tokens=200,
-            temperature=0.3,
+            messages=[{"role": "user", "content": EXPANSION_PROMPT.format(query=query)}],
         )
-        raw = resp.choices[0].message.content.strip()
+        raw = resp.content[0].text.strip()
         variants = json.loads(raw)
         if isinstance(variants, list) and all(isinstance(v, str) for v in variants):
             logger.info(f"Expanded '{query}' → {variants}")
@@ -91,28 +82,22 @@ def rerank(
     query: str,
     candidates: list[dict[str, Any]],
     top_k: int = 10,
-    client: Groq | None = None,
+    client: anthropic.Anthropic | None = None,
 ) -> list[dict[str, Any]]:
-    """
-    LLM-based reranking. Scores each candidate post for relevance to the query,
-    then returns the top_k most relevant.
-
-    Falls back to original FAISS score ordering if Groq fails.
-    """
     if not candidates:
         return candidates
 
     client = client or _get_client()
 
-    # Build numbered post block (truncate long posts)
     posts_block = "\n\n".join(
         f"[{i+1}] {c['text'][:400]}"
         for i, c in enumerate(candidates)
     )
 
     try:
-        resp = client.chat.completions.create(
-            model=settings.GROQ_MODEL,
+        resp = client.messages.create(
+            model=settings.ANTHROPIC_MODEL,
+            max_tokens=100,
             messages=[{
                 "role": "user",
                 "content": RERANK_PROMPT.format(
@@ -121,10 +106,8 @@ def rerank(
                     posts_block=posts_block,
                 )
             }],
-            max_tokens=100,
-            temperature=0.0,
         )
-        raw = resp.choices[0].message.content.strip()
+        raw = resp.content[0].text.strip()
         scores = json.loads(raw)
 
         if isinstance(scores, list) and len(scores) == len(candidates):
@@ -144,20 +127,13 @@ def rerank(
 
 def groq_enhanced_search(
     query: str,
-    store,           # FAISSStore
-    embedder,        # PostEmbedder
+    store,
+    embedder,
     k: int = 10,
     filters: dict | None = None,
     expand: bool = True,
     rerank_results: bool = True,
 ) -> list[dict]:
-    """
-    Full pipeline:
-      1. Optionally expand query with Groq
-      2. Embed all query variants
-      3. Search FAISS for each variant, merge results
-      4. Optionally rerank with Groq LLM
-    """
     queries = expand_query(query) if expand else [query]
 
     seen_ids: set[str] = set()
@@ -171,9 +147,8 @@ def groq_enhanced_search(
                 seen_ids.add(hit["post_id"])
                 all_candidates.append(hit)
 
-    # Sort by FAISS score before reranking
     all_candidates.sort(key=lambda c: c["score"], reverse=True)
-    all_candidates = all_candidates[:k * 3]   # cap before LLM call
+    all_candidates = all_candidates[:k * 3]
 
     if rerank_results and all_candidates:
         return rerank(query, all_candidates, top_k=k)

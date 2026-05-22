@@ -7,9 +7,9 @@ from pathlib import Path
 
 
 class Settings(BaseSettings):
-    # ── Groq ──────────────────────────────────────────────────────────
-    GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama-3.1-8b-instant"     # used for query expansion / reranking
+    # ── Anthropic ─────────────────────────────────────────────────────
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
 
     # ── Embeddings ────────────────────────────────────────────────────
     EMBED_MODEL: str = "BAAI/bge-small-en-v1.5"  # local sentence-transformers
